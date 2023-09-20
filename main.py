@@ -2,20 +2,20 @@ import pygame
 from pygame.locals import *
 from sys import exit
 import random
-# import os, sys
-# from fcntl import ioctl
+from os import sys
+from fcntl import ioctl
 
 pygame.init()
 
-# RD_SWITCHES   = 24929
-# RD_PBUTTONS   = 24930
-# WR_L_DISPLAY  = 24931
-# WR_R_DISPLAY  = 24932
-# WR_RED_LEDS   = 24933
-# WR_GREEN_LEDS = 24934
-# DATA = 0
-# fd = os.open(sys.argv[1], os.O_RDWR)
-# button = 0
+RD_SWITCHES   = 24929
+RD_PBUTTONS   = 24930
+WR_L_DISPLAY  = 24931
+WR_R_DISPLAY  = 24932
+WR_RED_LEDS   = 24933
+WR_GREEN_LEDS = 24934
+DATA = 0
+fd = os.open(sys.argv[1], os.O_RDWR)
+button = 0
 
 
 k = 1
@@ -27,7 +27,7 @@ height = 466
 i_sugar = random.randint(0,3)
 i_mug = 0
 positions_sugar = 63, 238, 415, 605
-v_sugar = 10 + k * 4
+v_sugar = 10
 X_sugar = positions_sugar[i_sugar]
 Y_sugar = 40
 positions_mug = 38, 213, 390, 585
@@ -93,10 +93,18 @@ clock = pygame.time.Clock()
 
 screen.fill(BLACK)
 
+menuzinho = 0
 
 while True:
     clock.tick(30)
     screen.fill(BLACK)
+    # if menuzinho == 0:
+    #     msg1 = 'OII'
+    #     text1 = Font2.render(msg1, True, (250, 250, 250))
+    #     screen.blit(text1, (520, 30))
+    #     if pygame.key.get_pressed()[K_KP_ENTER]:
+    #             menuzinho = 1
+
     screen.blit(background, (0, 0))
     screen.blit(sugar, (X_sugar, Y_sugar))
     screen.blit(mug, (X_mug, 380))
@@ -113,22 +121,17 @@ while True:
         screen.blit(heart, (600, 20))
         screen.blit(heart, (650, 20))
 
-    #X_mug = positions_mug[button]
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            exit()
-        if pygame.key.get_pressed()[K_LEFT]:
-            i_mug = i_mug - 1
-            if i_mug < 0:
-                i_mug = 3
-            X_mug = positions_mug[i_mug]
-        if pygame.key.get_pressed()[K_RIGHT]:
-            i_mug = i_mug + 1
-            if i_mug > 3:
-                i_mug = 0
-            X_mug = positions_mug[i_mug]
-
+    ioctl(fd, RD_PBUTTONS)
+    button = os.read(fd, 4);  # read 4 bytes and store in red var
+    if button == 7:
+        index = 0
+    elif button == 0xB:
+        index = 1
+    elif button == 0xD:
+        index = 2
+    elif button == 0xE:
+        index = 3
+    X_mug = positions_mug[index]
 
     if END_GAME == False:
         Y_sugar = Y_sugar + v_sugar
@@ -141,10 +144,10 @@ while True:
 
     if hearts == 0 :
         END_GAME = True
-        # DATA = 0xFFFFFFFF
-        # ioctl(fd, WR_RED_LEDS)
-        # retval = os.write(fd, DATA.to_bytes(4, 'little'))
-        # #print("wrote %d bytes" % retval)
+        DATA = 0xFFFFFFFF
+        ioctl(fd, WR_RED_LEDS)
+        exit()
+
 
 
     if score == 15:
@@ -152,11 +155,8 @@ while True:
         screen.blit(dead_heart, (550, 20))
         screen.blit(dead_heart, (600, 20))
         screen.blit(dead_heart, (650, 20))
-        # DATA = 0xFFFFFFFF
-        # ioctl(fd, WR_GREEN_LEDS)
-        # retval = os.write(fd, DATA.to_bytes(4, 'little'))
-        # # print("wrote %d bytes" % retval)
-
+        DATA = 0xFFFFFFFF
+        ioctl(fd, WR_GREEN_LEDS)
         exit()
 
     if 360 <= Y_sugar <= 370 and i_mug == i_sugar:
