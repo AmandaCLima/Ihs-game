@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import *
 from sys import exit
 import random
-from os import sys
+import os, sys
 from fcntl import ioctl
 
 pygame.init()
@@ -37,6 +37,8 @@ Y_splash = 338
 MOVE_MUG = True
 END_GAME = False
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
 
 
 Font1 = pygame.font.SysFont('franklingothicmedium', 25, True, False)
@@ -45,8 +47,13 @@ Font3 = pygame.font.SysFont('franklingothicmedium', 50, False, True)
 screen = pygame.display.set_mode((width, height))
 sugar = pygame.image.load('sugar.png')
 sugar = pygame.transform.scale(sugar, (50, 50))
-background = pygame.image.load('background.png').convert()
+
+background = pygame.image.load('menu_background.jpeg').convert()
+background_inicial = pygame.image.load('background_inicial.jpeg').convert()
+
 background = pygame.transform.scale(background, (700, 466))
+background_inicial = pygame.transform.scale(background_inicial, (700, 466))
+
 mug = pygame.image.load('mug.png')
 heart = pygame.image.load(('heart.png'))
 heart = pygame.transform.scale(heart, (50, 50))
@@ -54,6 +61,9 @@ dead_heart = pygame.image.load('dead_heart.png')
 dead_heart = pygame.transform.scale(dead_heart, (50, 50))
 mug = pygame.transform.scale(mug, (100, 100))
 
+def draw_text(text, font, color, x, y): # Funcao para facilitar a escrita de texto
+    image = font.render(text, True, color)
+    screen.blit(image, (x, y))
 
 class Splash(pygame.sprite.Sprite):
 
@@ -85,6 +95,70 @@ class Splash(pygame.sprite.Sprite):
                 self.atual = 0
                 self.animate = False
             self.image = self.sprites[int(self.atual)]
+            
+# Função do menu inicial
+def start_menu():
+    counter = 0
+
+    while True:
+        screen.blit(background_inicial, (0, 0))
+
+        counter += 1
+
+        # Faz o texto "START GAME" piscar
+        if counter // 330 % 2 == 0:
+            draw_text('Sweeten The Coffee', Font3, BLACK, 190, 155)
+            draw_text('Press S to Start', Font2, WHITE, 270, 290)
+            draw_text('Press Q to Quit', Font2, WHITE, 270, 320)
+
+        # Nomes dos autores no canto inferior direito
+        draw_text('Thiago Costa @ tjgc', Font1, BLACK, width - 180, height - 70)
+        draw_text('Amanda Lima @ ', Font1, BLACK, width - 180, height - 55)
+        draw_text('Pedro César @pcgr', Font1, BLACK, width - 180, height - 40)
+        draw_text('Lígia Ferro @ lfblcp', Font1, BLACK, width - 180, height - 25)
+        
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    pygame.quit()
+                    sys.exit()
+                elif event.key == pygame.K_s:
+                    return  # Retorna para o jogo principal
+            
+# Função para o Menu de game over
+def game_over_menu():
+    global END_GAME
+    counter = 0
+
+    while END_GAME:
+        screen.blit(background, (0, 0))
+
+        counter += 1
+
+        # Faz o texto "GAME OVER" piscar
+        if counter // 180 % 2 == 0:
+            draw_text('GAME OVER', Font3, RED, 20, 20)
+
+        draw_text('Press R to Restart', Font2, WHITE, 20, 70)
+        draw_text('Press Q to Quit', Font2, WHITE, 20, 110)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    pygame.quit()
+                    sys.exit()
+                elif event.key == pygame.K_r:
+                    END_GAME = False
 
 Game_Sprites = pygame.sprite.Group()
 Splash_ = Splash()
@@ -95,15 +169,10 @@ screen.fill(BLACK)
 
 menuzinho = 0
 
+# GAME LOOP
 while True:
     clock.tick(30)
     screen.fill(BLACK)
-    # if menuzinho == 0:
-    #     msg1 = 'OII'
-    #     text1 = Font2.render(msg1, True, (250, 250, 250))
-    #     screen.blit(text1, (520, 30))
-    #     if pygame.key.get_pressed()[K_KP_ENTER]:
-    #             menuzinho = 1
 
     screen.blit(background, (0, 0))
     screen.blit(sugar, (X_sugar, Y_sugar))
@@ -146,7 +215,7 @@ while True:
         END_GAME = True
         DATA = 0xFFFFFFFF
         ioctl(fd, WR_RED_LEDS)
-        exit()
+        game_over_menu() # Menu de final de jogo
 
 
 
@@ -171,7 +240,3 @@ while True:
     Game_Sprites.draw(screen)
     Game_Sprites.update(X_mug)
     pygame.display.flip()
-
-
-
-
